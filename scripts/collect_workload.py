@@ -34,6 +34,29 @@ def as_list(value):
 DEFAULT_UDP_RATE = "0"
 
 
+# iperf3 3.20 (Ubuntu 26.04) rejects a UDP -l above the 65507-byte payload limit.
+# buffer_length stays the workbook value for TCP; UDP is clamped to that limit.
+UDP_MAX_BLOCK_BYTES = 65507
+
+
+def block_bytes(length: str) -> int | None:
+    match = re.fullmatch(r"(\d+(?:\.\d+)?)([KMGkmg])?", str(length or "").strip())
+    if not match:
+        return None
+    scale = {"": 1, "K": 1024, "M": 1024 ** 2, "G": 1024 ** 3}[(match.group(2) or "").upper()]
+    return int(float(match.group(1)) * scale)
+
+
+def length_for_protocol(protocol: str, length: str) -> str:
+    text = str(length or "").strip()
+    if protocol != "udp" or not text:
+        return text
+    nbytes = block_bytes(text)
+    if nbytes is not None and nbytes > UDP_MAX_BLOCK_BYTES:
+        return str(UDP_MAX_BLOCK_BYTES)
+    return text
+
+
 def udp_rate(raw) -> str:
     """UDP -b target rate. iperf3 itself defaults UDP to 1 Mbit/s, which made the
     UDP metric report that cap instead of throughput. Empty or 0 uses DEFAULT_UDP_RATE,
@@ -41,46 +64,6 @@ def udp_rate(raw) -> str:
     text = str(raw or "").strip()
     if text in {"", "0", "0M", "0K", "0G"}:
         return DEFAULT_UDP_RATE
-    return text
-
-
-# iperf3 rejects UDP -l outside 16..65507 bytes. Sheet buffer_length (128K)
-# stays on TCP. UDP uses the largest legal block when that value is larger.
-_UDP_BLOCK_MIN = 16
-_UDP_BLOCK_MAX = 65507
-
-
-def _length_bytes(length: str) -> int | None:
-    text = str(length or "").strip()
-    match = re.fullmatch(r"(\d+(?:\.\d+)?)([kKmMgG])?", text)
-    if not match:
-        return None
-    value = float(match.group(1))
-    unit = match.group(2) or ""
-    scale = {
-        "": 1,
-        "k": 1000,
-        "K": 1024,
-        "m": 1000**2,
-        "M": 1024**2,
-        "g": 1000**3,
-        "G": 1024**3,
-    }[unit]
-    return int(value * scale)
-
-
-def udp_block_length(length: str) -> str:
-    """Clamp a sheet buffer_length so iperf3 accepts UDP -l."""
-    text = str(length or "").strip()
-    if not text:
-        return ""
-    nbytes = _length_bytes(text)
-    if nbytes is None:
-        return text
-    if nbytes > _UDP_BLOCK_MAX:
-        return str(_UDP_BLOCK_MAX)
-    if nbytes < _UDP_BLOCK_MIN:
-        return str(_UDP_BLOCK_MIN)
     return text
 
 
@@ -140,9 +123,9 @@ def iperf(protocol: str, port: int, seconds: int, streams: int, reverse, bandwid
         ]
         if protocol == "udp":
             cmd += ["-u", "-b", bandwidth]
-        send_length = udp_block_length(length) if protocol == "udp" else str(length).strip()
-        if send_length:
-            cmd += ["-l", send_length]
+        block = length_for_protocol(protocol, length)
+        if block:
+            cmd += ["-l", block]
         if str(window).strip():
             cmd += ["-w", str(window).strip()]
         try:
