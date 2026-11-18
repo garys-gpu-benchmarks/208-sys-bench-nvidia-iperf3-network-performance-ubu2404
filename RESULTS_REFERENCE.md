@@ -3,7 +3,7 @@
 **Main goal:** Measure TCP/UDP iperf3 throughput and stability  
 **Tools:** Run iperf3 client (-J) and, for loopback, iperf3 -s -1
 
-Reference results measured by the maintainer on the system shown in each section (generator TEMPLATE_00_145 · recorded 2026-11-17). Your own runs write `results/RESULTS_ACTUAL.md` in the same format.
+Reference results measured by the maintainer on the system shown in each section (generator TEMPLATE_00_146 · recorded 2026-11-18). Your own runs write `results/RESULTS_ACTUAL.md` in the same format.
 
 > Smoke runs use deliberately small sizes. They check that the workload installs and runs end to end; their numbers are not performance results. Baseline and extended are.
 
@@ -11,16 +11,16 @@ Reference results measured by the maintainer on the system shown in each section
 ## smoke
 
 - **System:** 1× NVIDIA H100 NVL (95830 MiB) · AMD EPYC 9374F 32-Core Processor · Ubuntu 24.04.5 LTS · kernel 6.8.0-138-generic · driver 595.112.07
-- **Run:** 2026-11-17T10:56:13Z · status **PASS** (exit 0)
-- **Time (mm:ss):** setup 00:28 · benchmark 00:05 · whole run 00:37
-- **Source:** run 208_20261117_105613
+- **Run:** 2026-11-18T10:45:01Z · status **PASS** (exit 0)
+- **Time (mm:ss):** setup 00:28 · benchmark 00:05 · whole run 00:40
+- **Source:** run 208_20261118_104501
 - **Command:** `bash run_benchmark.sh --smoke --protocol tcp,udp --port 5201 --reverse-mode false --window-size 256K --buffer-length 128K --parallel-streams 1 --bandwidth-limit 0 --omit-initial-seconds 0 --time 2`
 
 | # | Metric | Result |
 |---|---|---|
-| 1 | TCP loopback throughput (tcp_loopback_gbps) | 24.12784896419551 |
-| 2 | UDP loopback throughput (udp_throughput_gbps) | 20.552657311611608 |
-| 3 | UDP jitter (udp_jitter_ms) | 0.0033400607819940222 |
-| 4 | Packet loss, percent (packet_loss_rate) | 0.4675620881905727 |
+| 1 | TCP loopback throughput (tcp_loopback_gbps) | 33.0695006332477 |
+| 2 | UDP loopback throughput (udp_throughput_gbps) | 17.542740139364057 |
+| 3 | UDP jitter (udp_jitter_ms) | 0.0018881851549601076 |
+| 4 | Packet loss, percent (packet_loss_rate) | 2.4672679662496364 |
 | 5 | TCP retransmit count per run (tcp_retransmit_count) | 0.0 |
 <!-- /profile:smoke -->
